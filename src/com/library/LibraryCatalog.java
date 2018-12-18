@@ -6,6 +6,7 @@ public class LibraryCatalog implements Library {
 
 	private List<Book> bookList = new ArrayList<>();
 
+	
 	public void addBook(Book book) {
 
 		bookList.add(book);
@@ -14,33 +15,27 @@ public class LibraryCatalog implements Library {
 	}
 
 	public boolean deleteBookByName(String bookName) {
-		for (Book book : bookList) {
-			if (book.getTitle().toLowerCase().equals(bookName.toLowerCase())) {
-				bookList.remove(book);
-				System.out.println(bookName + " removed");
-				System.out.println();
-				return true;
-			} else {
-				System.out.println(bookName + " is not on the list");
-				System.out.println();
-				return false;
-			}
+
+		if (findBookByName(bookName) == null) {
+			System.out.println(bookName + " is not on the list");
+			System.out.println();
+			return false;
+		} else {
+			bookList.remove(findBookByName(bookName));
+			System.out.println(bookName + " removed");
+			System.out.println();
+			return true;
 
 		}
-		return false;
 
 	}
 
 	public Book findBookByName(String bookName) {
 		for (Book book : bookList) {
 			if (book.getTitle().toLowerCase().equals(bookName.toLowerCase())) {
-				System.out.println("The book is on the list");
-				System.out.println();
 				return book;
 			} else {
-				System.out.println("The book is not on the list");
-				System.out.println();
-				return null;
+				continue;
 			}
 
 		}
@@ -49,10 +44,45 @@ public class LibraryCatalog implements Library {
 	}
 
 	public void printAllBooks() {
-		for (Book book : bookList) {
-			System.out.println(book.getTitle());
+		System.out.println("The catalog contains the following books:");
+		if (bookList.size() == 0) {
+			System.out.println("The catalog is empty!");
+		} else {
+			for (Book book : bookList) {
+				System.out.println("\"" + book.getTitle() + "\" - " + book.getStatus());
+			}
+		}
+		System.out.println();
+
+	}
+/* borrowBook method take 3 parameters.
+ * It adds the book object returned by findBookByName method to the boroowedList of the client.
+ * 
+ * */
+	public void borrowBook(String bookName, String firstName, String lastName) {
+		Book book = findBookByName(bookName);
+		if (book == null) {
+			return;
+		}
+		if (book.getStatus().equals(Book.INLIBRARYSTATUS)) {
+			book.setStatus(Book.BORROWEDSTATUS);
+			LibraryClient client = (LibraryClient) ClientsDatabase.findClientByFirstNameLastName(firstName, lastName);
+			client.addBookToBorrowedList(book);
+		} else {
+			System.out.println("The book " + book.getTitle() + " is already borrowed");
+
 		}
 
+	}
+
+	public void returnBook(String bookName) {
+		Book book = findBookByName(bookName);
+		if (book == null) {
+			return;
+		}
+		LibraryClient client = ClientsDatabase.findClientThatBorrowedBookByTitle(bookName);
+		client.deleteBookFromBorrowedList(book);
+		book.setStatus(Book.INLIBRARYSTATUS);
 	}
 
 }
